@@ -9,13 +9,7 @@ auth.onAuthStateChanged((user) => {
 });
 
 function initializePage() {
-    // ▼▼▼ ここから追加 ▼▼▼
-    // --- 効果音の準備 ---
-    const successSound = new Audio('https://raw.githubusercontent.com/n-y-z-o/nyzo-sound-effects/main/beeps/beep-07a.mp3');
-    const errorSound = new Audio('https://raw.githubusercontent.com/n-y-z-o/nyzo-sound-effects/main/navigation/error-01a.mp3');
-    successSound.preload = 'auto';
-    errorSound.preload = 'auto';
-    // ▲▲▲ ここまで追加 ▲▲▲
+    // ▼▼▼ ここにあった効果音の準備コードを削除します ▼▼▼
 
     const eventId = localStorage.getItem('fanclub-event-id');
     const eventName = localStorage.getItem('fanclub-event-name');
@@ -67,8 +61,8 @@ function initializePage() {
             const masterDocRef = masterCollectionRef.doc(memberId);
             const masterDoc = await masterDocRef.get();
             if (masterDoc.exists) {
-                // ▼▼▼ 失敗（配布済み）の効果音を追加 ▼▼▼
-                errorSound.play();
+                // ▼▼▼ 失敗（配布済み）の効果音再生方法を変更 ▼▼▼
+                new Audio('https://raw.githubusercontent.com/n-y-z-o/nyzo-sound-effects/main/navigation/error-01a.mp3').play();
                 const data = masterDoc.data();
                 const previousEventName = data.eventName || '以前のイベント';
                 showAlert(`【ツアーで配布済み】\nこの会員は既に「${previousEventName}」で特典を受け取っています。`, 'error');
@@ -79,8 +73,8 @@ function initializePage() {
                 batch.set(eventDocRef, distributionData); batch.set(masterDocRef, distributionData);
                 await batch.commit();
                 
-                // ▼▼▼ 成功の効果音を追加 ▼▼▼
-                successSound.play();
+                // ▼▼▼ 成功の効果音再生方法を変更 ▼▼▼
+                new Audio('https://raw.githubusercontent.com/n-y-z-o/nyzo-sound-effects/main/beeps/beep-07a.mp3').play();
                 showAlert('配布完了しました！', 'success'); 
             }
         } catch (error) { console.error("Error processing distribution: ", error); showAlert('エラーが発生しました。コンソールを確認してください。', 'error'); }
