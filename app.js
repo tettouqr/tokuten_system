@@ -49,11 +49,26 @@ function initializePage() {
     }
 
     async function handleDistribution(rawMemberId) {
-        let memberId = toHalfWidth(rawMemberId).trim();
-        if (memberId) {
-            memberId = memberId.replace(/^0+(?!$)/, '');
+        const memberIdRaw = toHalfWidth(rawMemberId).trim();
+
+        if (!memberIdRaw) {
+            alert("会員番号を入力してください。");
+            return;
         }
-        if (!memberId) { alert("会員番号を入力してください。"); memberIdInput.value = ''; return; }
+
+        // ▼▼▼ ここからが追加・修正箇所です ▼▼▼
+        // 半角数字のみかチェックするための正規表現
+        const numericRegex = /^[0-9]+$/;
+        if (!numericRegex.test(memberIdRaw)) {
+            showAlert('会員番号は半角数字で入力してください。', 'error');
+            memberIdInput.value = ''; // 入力欄をクリア
+            return; // 処理をここで中断
+        }
+
+        // 先行ゼロを除去
+        let memberId = memberIdRaw.replace(/^0+(?!$)/, '');
+        // ▲▲▲ ここまで ▲▲▲
+        
         memberIdInput.disabled = true; submitButton.disabled = true;
         try {
             const masterDocRef = masterCollectionRef.doc(memberId);
@@ -71,4 +86,26 @@ function initializePage() {
                 showAlert('配布完了しました！', 'success'); 
             }
         } catch (error) { console.error("Error processing distribution: ", error); showAlert('エラーが発生しました。コンソールを確認してください。', 'error'); }
-        memberIdInput.value = ''; memberIdInput.disabled = false; submit
+        memberIdInput.value = ''; memberIdInput.disabled = false; submitButton.disabled = false; memberIdInput.focus();
+    }
+
+    function showAlert(message, type) {
+        const alertMessage = document.getElementById('alert-message');
+        alertMessage.textContent = message;
+        alertMessage.className = type;
+        alertMessage.style.display = 'block';
+        setTimeout(() => { alertMessage.style.display = 'none'; }, 6000);
+    }
+
+    // --- イベントリスナー ---
+    submitButton.addEventListener('click', () => handleDistribution(memberIdInput.value));
+    memberIdInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleDistribution(memberIdInput.value);
+        }
+    });
+
+    // --- 初期化処理 ---
+    updateCounters();
+    memberIdInput.focus();
+}
