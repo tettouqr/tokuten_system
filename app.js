@@ -1,6 +1,6 @@
-// 冒頭部分（変更なし）
 checkAuthState(); 
 let staffEmail = '';
+
 auth.onAuthStateChanged((user) => {
     if (user) {
         staffEmail = user.email;
@@ -9,6 +9,14 @@ auth.onAuthStateChanged((user) => {
 });
 
 function initializePage() {
+    // ▼▼▼ ここから追加 ▼▼▼
+    // --- 効果音の準備 ---
+    const successSound = new Audio('https://raw.githubusercontent.com/n-y-z-o/nyzo-sound-effects/main/beeps/beep-07a.mp3');
+    const errorSound = new Audio('https://raw.githubusercontent.com/n-y-z-o/nyzo-sound-effects/main/navigation/error-01a.mp3');
+    successSound.preload = 'auto';
+    errorSound.preload = 'auto';
+    // ▲▲▲ ここまで追加 ▲▲▲
+
     const eventId = localStorage.getItem('fanclub-event-id');
     const eventName = localStorage.getItem('fanclub-event-name');
 
@@ -32,12 +40,8 @@ function initializePage() {
 
     const memberIdInput = document.getElementById('member-id-input');
     const submitButton = document.getElementById('submit-button');
-    const alertMessage = document.getElementById('alert-message');
     const totalCountEl = document.getElementById('total-count');
     const todayCountEl = document.getElementById('today-count');
-    // ▼▼▼ QRコード関連の変数を削除 ▼▼▼
-    // const startQrButton = ...
-    // const stopQrButton = ...
 
     const eventCollectionRef = db.collection("events").doc(eventId).collection("distributions");
     const masterCollectionRef = db.collection("master_distributions");
@@ -63,6 +67,8 @@ function initializePage() {
             const masterDocRef = masterCollectionRef.doc(memberId);
             const masterDoc = await masterDocRef.get();
             if (masterDoc.exists) {
+                // ▼▼▼ 失敗（配布済み）の効果音を追加 ▼▼▼
+                errorSound.play();
                 const data = masterDoc.data();
                 const previousEventName = data.eventName || '以前のイベント';
                 showAlert(`【ツアーで配布済み】\nこの会員は既に「${previousEventName}」で特典を受け取っています。`, 'error');
@@ -72,24 +78,30 @@ function initializePage() {
                 const eventDocRef = eventCollectionRef.doc(memberId);
                 batch.set(eventDocRef, distributionData); batch.set(masterDocRef, distributionData);
                 await batch.commit();
+                
+                // ▼▼▼ 成功の効果音を追加 ▼▼▼
+                successSound.play();
                 showAlert('配布完了しました！', 'success'); 
             }
         } catch (error) { console.error("Error processing distribution: ", error); showAlert('エラーが発生しました。コンソールを確認してください。', 'error'); }
         memberIdInput.value = ''; memberIdInput.disabled = false; submitButton.disabled = false; memberIdInput.focus();
     }
 
-    function showAlert(message, type) { alertMessage.textContent = message; alertMessage.className = type; alertMessage.style.display = 'block'; setTimeout(() => { alertMessage.style.display = 'none'; }, 6000); }
-
-    // ▼▼▼ QRコードリーダー関連のプログラムをここからすべて削除しました ▼▼▼
-    // let html5QrCode = ...
-    // function onScanSuccess(...)
-    // ...
-    // stopQrButton.addEventListener(...)
-    // ▲▲▲ ここまで ▲▲▲
+    function showAlert(message, type) {
+        const alertMessage = document.getElementById('alert-message');
+        alertMessage.textContent = message;
+        alertMessage.className = type;
+        alertMessage.style.display = 'block';
+        setTimeout(() => { alertMessage.style.display = 'none'; }, 6000);
+    }
 
     // --- イベントリスナー ---
     submitButton.addEventListener('click', () => handleDistribution(memberIdInput.value));
-    memberIdInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') { handleDistribution(memberIdInput.value); } });
+    memberIdInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleDistribution(memberIdInput.value);
+        }
+    });
 
     // --- 初期化処理 ---
     updateCounters();
