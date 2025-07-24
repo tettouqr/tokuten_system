@@ -15,7 +15,7 @@ function initializeMasterHistoryPage() {
     const masterCollectionRef = db.collection("master_distributions");
     
     // ▼▼▼ マスターリセット用のパスワード（必ず変更してください！）▼▼▼
-    const MASTER_RESET_PASSWORD = "NCP5";
+    const MASTER_RESET_PASSWORD = "tettou";
     
     let allHistoryData = [];
 
